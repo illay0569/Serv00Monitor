@@ -1,0 +1,32 @@
+{
+  "accounts": [
+    {
+      "username": "user1",
+      "password": "password1",
+      "type": "ct8",
+      "cronCommands": [
+        "/usr/home/serv00name/domains",
+        "你的脚本"
+      ]
+    },
+    {
+      "username": "user2",
+      "password": "password2",
+      "panelnum": "2",
+      "type": "serv00",
+      "cronCommands": [
+        "/usr/home/serv00name"
+      ]
+    },
+    {
+      "username": "user3",
+      "password": "password3",
+      "type": "ct8",
+      "cronCommands": [
+        "/usr/home/serv00name",
+        "你的脚本",
+        "python /usr/home/serv00name/domains/backup.py"
+      ]
+    }
+  ]
+}
