@@ -50,6 +50,7 @@
 ## 技术栈
 
 - Cloudflare Workers
+- KV Storage
 - Material Design
 - Telegram Bot API
 
