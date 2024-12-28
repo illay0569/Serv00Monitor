@@ -1087,7 +1087,7 @@ function getHtmlContent() {
                     statusIcon +
                   '</i>' +
                   '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    (cronResult.success ? '保活成功' : '保活失败') +
+                    (cronResult.success ? '成功' : '失败') +
                   '</span>' +
                 '</div>';
               }).join('') +
