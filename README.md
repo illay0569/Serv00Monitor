@@ -2,6 +2,8 @@
 
 一个优雅的 Serv00/CT8 面板监控工具，基于 Cloudflare Workers 构建。
 
+![Serv00 Monitor](Serv00Monitor.jpg)
+
 ## 功能特点
 
 - 🔐 安全的密码保护访问机制
