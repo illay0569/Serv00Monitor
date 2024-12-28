@@ -1265,7 +1265,7 @@ function getHtmlContent() {
       // 添加单独运行账号的函数
       async function runSingleAccount(username) {
         const statusDiv = document.getElementById('status');
-        statusDiv.textContent = '正在运行 ' + username + ' 账户脚本...';
+        statusDiv.textContent = '正在运行 ' + username + ' 账号脚本...';
         
         try {
           const response = await fetch('/run-account', {
@@ -1281,13 +1281,13 @@ function getHtmlContent() {
             const results = await (await fetch('/results')).json();
             if (results.authenticated) {
               displayResults(results.results);
-              statusDiv.textContent = username + ' 账户脚本已完成!';
+              statusDiv.textContent = username + ' 账号脚本已完成!';
             }
           } else if (response.status === 401) {
             statusDiv.textContent = '未授权。请重新登录';
             showLoginForm();
           } else {
-            statusDiv.textContent = username + ' 账户脚本执行出错!';
+            statusDiv.textContent = username + ' 账号脚本执行出错!';
           }
         } catch (error) {
           statusDiv.textContent = '错误: ' + error.message;
@@ -1459,7 +1459,7 @@ async function loginAccount(account) {
 
           if (success) {
             if (addCronResponseContent.includes('Cron job has been added') || addCronResponseContent.includes('Zadanie cron zostało dodane')) {
-              const message = `添加���新的 cron 任务：${cronCommand}`;
+              const message = `添加新的 cron 任务：${cronCommand}`;
               console.log(message);
               await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
               cronResults.push({ success: true, message });
@@ -1474,7 +1474,7 @@ async function loginAccount(account) {
               const checkCronListContent = await checkCronListResponse.text();
               
               if (checkCronListContent.includes(cronCommand)) {
-                const message = `确实添加了新的 cron 任务：${cronCommand}`;
+                const message = `添加了新的 cron 任务：${cronCommand}`;
                 console.log(message);
                 await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
                 cronResults.push({ success: true, message });
@@ -1503,7 +1503,7 @@ async function loginAccount(account) {
         lastRun: new Date().toISOString() 
       };
     } else {
-      const message = `登录失败，未找到原因。请检查账号和密码是否正确。`;
+      const message = `登录失败，未找到原因。请检查账号和密码是否正确`;
       console.error(message);
       return { 
         username, 
