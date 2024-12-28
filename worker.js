@@ -1317,7 +1317,7 @@ function getHtmlContent() {
             const results = await (await fetch('/results')).json();
             if (results.authenticated) {
               displayResults(results.results);
-              statusDiv.textContent = username + ' 账号脚本已完成!';
+              statusDiv.textContent = username + ' Account script completed!';
             }
           } else if (response.status === 401) {
             statusDiv.textContent = '未授权。请重新登录';
