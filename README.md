@@ -4,12 +4,19 @@
 
 ![Serv00 Monitor](Serv00Monitor.jpg)
 
+![serv00666](serv00666.png)
+
+## Update 大更新!
+- 新增功能，允许用户能够运行单个账户脚本
+- 优化了 UI 界面，文字表达，更新时间去“秒”
+  
 ## 功能特点
 
 - 🔐 安全的密码保护访问机制
 - 🌓 优雅的深色/浅色主题切换
 - 📱 完美支持移动端显示
 - 🔄 一键运行所有服务器脚本
+- 1️⃣ 支持前端运行单独帐户脚本
 - 📊 美观的仪表盘界面
 - 🤖 Telegram 机器人通知
 - 🔧 自动添加定时任务
@@ -21,10 +28,10 @@
 2. 复制 `worker.js` 内容到 Worker 编辑器
 3. 创建一个名为`CRON_RESULTS`的KV变量
 4. 创建以下变量和机密（txt文件模板）:
-   - `PASSWORD`: 前端登陆密码
-   - `ACCOUNTS_JSON`: 存储账号信息
-   - `TELEGRAM_JSON`: 存储 Telegram 配置
-   - `CRON_RESULTS`: CRON_RESULTS
+- `PASSWORD`: 前端登陆密码
+- `ACCOUNTS_JSON`: 存储账号信息
+- `TELEGRAM_JSON`: 存储 Telegram 配置
+- `CRON_RESULTS`: CRON_RESULTS
 
 ## 使用说明
 
