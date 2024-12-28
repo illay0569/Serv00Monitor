@@ -19,7 +19,7 @@
 
 1. 在 Cloudflare Workers 创建新的 Worker
 2. 复制 `worker.js` 内容到 Worker 编辑器
-3. 创建一个名为`CRON_RESULTS的KV变量
+3. 创建一个名为`CRON_RESULTS`的KV变量
 4. 创建以下变量和机密（txt文件模板）:
    - `PASSWORD`: 前端登陆密码
    - `ACCOUNTS_JSON`: 存储账号信息
