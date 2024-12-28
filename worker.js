@@ -53,11 +53,11 @@ async function handleRequest(request) {
       return new Response('Unauthorized', { status: 401 })
     }
     
-    // Get the username of the account to run
+    // 获取要运行的账号用户名
     const data = await request.json()
     const username = data.username
     
-    // Find the corresponding account from the configuration
+    // 从配置中找到对应账号
     const accountsData = JSON.parse(ACCOUNTS_JSON)
     const account = accountsData.accounts.find(acc => acc.username === username)
     
@@ -68,10 +68,10 @@ async function handleRequest(request) {
       })
     }
 
-    // Only run this specific account
+    // 只运行这一个账号
     const result = await loginAccount(account)
     
-    // Get the previous results and update
+    // 获取之前的结果并更新
     let allResults = await CRON_RESULTS.get('lastResults', 'json') || []
     const index = allResults.findIndex(r => r.username === username)
     if (index >= 0) {
@@ -85,7 +85,7 @@ async function handleRequest(request) {
       headers: { 'Content-Type': 'application/json' }
     })
   } else {
-    // Display the login page or results page HTML
+    // 显示登录页面或结果页面的 HTML
     return new Response(getHtmlContent(), {
       headers: { 'Content-Type': 'text/html' },
     })
@@ -107,29 +107,27 @@ function isAuthenticated(request) {
 function getHtmlContent() {
   return `
   <!DOCTYPE html>
-  <html lang="en">
+  <html lang="zh-CN">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="Serv00 Monitor - Server Monitoring Panel">
-    <meta name="keywords" content="serv00, monitor, dashboard">
+    <meta name="description" content="Serv00 Monitor - 服务器监控面板">
+    <meta name="keywords" content="serv00, monitor, dashboard, 监控">
     <meta name="author" content="YYDS666">
     <meta name="theme-color" content="#ee7752">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <!-- Website icon -->
+    <!-- 网站图标 -->
     <link rel="icon" type="image/png" href="https://api.dicebear.com/7.x/bottts/svg?seed=monitor">
     <link rel="apple-touch-icon" href="https://api.dicebear.com/7.x/bottts/svg?seed=monitor">
     
-    <title>Serv00 Monitor | Server Monitoring Panel</title>
+    <title>Serv00 Monitor | 服务器监控面板</title>
 
-    <!-- Existing stylesheet links -->
+    <!-- 现有的样式表链接 -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
-    <!-- Current styles code -->
-  `
-}
+    <!-- 现在的样式代码 -->
     <style>
       :root {
         --light-bg: #ffffff;
@@ -720,708 +718,644 @@ function getHtmlContent() {
         background: linear-gradient(to right, rgb(64, 224, 208), rgb(255, 140, 0), rgb(255, 0, 128));
         z-index: 1000;
       }
-<!-- Add loading state container -->
-<div class="loading-container">
-  <!-- Removed <span>Loading...</span> -->
-</div>
 
-<div class="page-container">
-  <div class="content-wrapper">
-    <!-- Login container -->
-    <div class="login-container">
-      <div id="loginForm" class="light">
-        <div class="logo">
-          <span>Serv00 Monitor</span>
+      /* 移除 loading 文字 */
+      .loading-container span {
+        display: none;
+      }
+
+      /* 修改页脚样式 */
+      .footer {
+        width: 100%;
+        text-align: center;
+        padding: 15px 0;
+        margin-top: 30px;
+        font-size: 0.875rem;
+        color: var(--light-text-secondary);
+        opacity: 0.8;
+        background: transparent;
+      }
+
+      .footer.dark {
+        color: var(--dark-text-secondary);
+      }
+
+      /* 修改 dashboard 容器样式 */
+      #dashboard {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+      }
+
+      /* dashboard-grid 样式调整 */
+      .dashboard-grid {
+        flex: 1;
+        padding-bottom: 20px;
+      }
+
+      /* 内容包器样式 */
+      .content-wrapper {
+        flex: 1;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* 当内容高度小于视口高度时，footer 固定在底部 */
+      @media screen and (min-height: calc(100vh - 100px)) {
+        .footer {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+        }
+      }
+
+      .footer a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: 500;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      /* 修改 loginForm 内的 logo 样式 */
+      #loginForm.light .logo {
+        color: var(--light-text);
+      }
+
+      #loginForm.dark .logo {
+        color: var(--dark-text);
+      }
+
+      /* 基础 logo 样式保持不变 */
+      .logo {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      /* 确保 logo 中的 span 也继承颜色 */
+      .logo span {
+        color: inherit;
+      }
+
+      .run-single-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 34px;
+        padding: 0;
+        border-radius: 17px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
+        color: white;
+        margin-left: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .run-single-btn.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .run-single-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        opacity: 0.95;
+      }
+
+      .run-single-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 确保渐变色不会被其他样式覆盖 */
+      .run-single-btn,
+      .run-single-btn.light,
+      .run-single-btn.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+      }
+
+      .cron-results-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .cron-item {
+        position: relative;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 8px;
+        border: 1px solid var(--light-border);
+      }
+
+      .cron-item.dark {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+      }
+
+      .cron-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .message-toggle {
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--light-text-secondary);
+        cursor: pointer;
+        padding: 0.5rem 0;
+        user-select: none;
+        margin: 0.5rem 0;
+      }
+
+      .message-toggle:hover {
+        opacity: 0.8;
+      }
+
+      .cron-message {
+        display: none;
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--light-text);
+        word-break: break-word;
+        overflow-wrap: break-word;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid var(--light-border);
+      }
+
+      .cron-message.dark {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+      }
+
+      .cron-message.show {
+        display: block;
+      }
+
+      /* 修改 cron-header 相关样式 */
+      .cron-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0;
+      }
+
+      .cron-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      .last-run {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--light-text-secondary);
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      /* 修改登录按钮样式 */
+      #loginForm button {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+        color: white;
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      #loginForm button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      #loginForm button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      #loginForm button.dark {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 确保渐变色不会被其他样式覆盖 */
+      #loginForm button,
+      #loginForm button.light,
+      #loginForm button.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+        color: white;
+      }
+    </style>
+  </head>
+  <body class="light">
+    <button id="themeToggle" class="theme-toggle light" onclick="toggleTheme()">
+      <i class="material-icons-round">light_mode</i>
+    </button>
+
+    <!-- 添加加载状态容器 -->
+    <div class="loading-container">
+      <!-- 移除了 <span>Loading...</span> -->
+    </div>
+
+    <div class="page-container">
+      <div class="content-wrapper">
+        <!-- 登录容器 -->
+        <div class="login-container">
+          <div id="loginForm" class="light">
+            <div class="logo">
+              <span>Serv00 Monitor</span>
+            </div>
+            <input type="password" id="password" placeholder="密 码" class="light">
+            <button onclick="login()" class="light">登 录</button>
+          </div>
         </div>
-        <input type="password" id="password" placeholder="Password" class="light">
-        <button onclick="login()" class="light">Login</button>
+
+        <!-- 仪表板 -->
+        <div id="dashboard" class="light">
+          <div class="dashboard-header">
+            <h1>Serv00 Monitor</h1>
+            <h3>Serv00 Panel for Cloudflare Workers</h3>
+            <button onclick="runScript()" class="light">运行全部脚本</button>
+          </div>
+          <div id="status"></div>
+          <div id="resultsGrid" class="dashboard-grid"></div>
+          
+          <!-- 添加页脚 -->
+          <footer class="footer light">
+            <span>&copy; MJJ <span id="year"></span> . All rights reserved.</span>
+          </footer>
+        </div>
       </div>
     </div>
 
-    <!-- Dashboard -->
-    <div id="dashboard" class="light">
-      <div class="dashboard-header">
-        <h1>Serv00 Monitor</h1>
-        <h3>Serv00 Panel for Cloudflare Workers</h3>
-        <button onclick="runScript()" class="light">Run All Scripts</button>
-      </div>
-      <div id="status"></div>
-      <div id="resultsGrid" class="dashboard-grid"></div>
-      
-      <!-- Add footer -->
-      <footer class="footer light">
-        <span>&copy; MJJ <span id="year"></span> . All rights reserved.</span>
-      </footer>
-    </div>
-  </div>
-</div>
+    <script>
+      let password = '';
 
-<script>
-  let password = ''; // Variable to store the password
-
-  // Function to show the login form
-  function showLoginForm() {
-    document.querySelector('.loading-container').style.display = 'none';
-    document.querySelector('.login-container').style.display = 'block';
-    document.getElementById('dashboard').style.display = 'none';
-  }
-
-  // Function to show the dashboard after successful login
-  function showDashboard() {
-    document.querySelector('.loading-container').style.display = 'none';
-    document.querySelector('.login-container').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    fetchResults();
-  }
-
-  // Function to check if the user is authenticated
-  async function checkAuth() {
-    try {
-      const response = await fetch('/check-auth');
-      const data = await response.json();
-      if (data.authenticated) {
-        showDashboard();
-      } else {
-        showLoginForm();
+      function showLoginForm() {
+        document.querySelector('.loading-container').style.display = 'none';
+        document.querySelector('.login-container').style.display = 'block';
+        document.getElementById('dashboard').style.display = 'none';
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      showLoginForm();
-    }
-  }
 
-  // Function to handle login action
-  async function login() {
-    password = document.getElementById('password').value; // Retrieve password entered by user
-    const formData = new FormData();
-    formData.append('password', password);
-    const response = await fetch('/login', { 
-      method: 'POST',
-      body: formData
-    });
-    const result = await response.json();
-    if (result.success) {
-      showDashboard();
-    } else {
-      alert('Incorrect password');
-    }
-  }
-
-  // Function to toggle between light and dark themes
-  function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.contains('dark');
-    const newTheme = isDark ? 'light' : 'dark';
-    
-    // Update status bar color
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (newTheme === 'dark') {
-      metaThemeColor.setAttribute('content', '#000000'); // Black for dark mode
-    } else {
-      metaThemeColor.setAttribute('content', '#ffffff'); // White for light mode
-    }
-    
-    // Original theme toggle logic
-    document.querySelectorAll('[class*="dark"], [class*="light"]').forEach(element => {
-      element.classList.remove('dark', 'light');
-      element.classList.add(newTheme);
-    });
-
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-      themeToggle.innerHTML = '<i class="material-icons-round">' + 
-        (newTheme === 'dark' ? 'dark_mode' : 'light_mode') + '</i>';
-    }
-
-    // Update footer style
-    const footer = document.querySelector('.footer');
-    if (footer) {
-      footer.classList.remove('dark', 'light');
-      footer.classList.add(newTheme);
-    }
-
-    // Update dashboard-header button style
-    const dashboardButton = document.querySelector('.dashboard-header button');
-    if (dashboardButton) {
-      dashboardButton.className = 'light';
-      dashboardButton.classList.add(newTheme);
-    }
-  }
-
-  // Trigger login function when pressing Enter on the password field
-  document.getElementById('password').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      login();
-    }
-  });
-
-  // Run authentication check on page load
-  document.addEventListener('DOMContentLoaded', checkAuth);
-
-  // Function to run all scripts
-  async function runScript() {
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = 'Running all scripts, please wait a few minutes...';
-    try {
-      const response = await fetch('/run', { method: 'POST' });
-      if (response.ok) {
-        const results = await response.json();
-        displayResults(results);
-        statusDiv.textContent = 'All scripts have been successfully executed!';
-      } else if (response.status === 401) {
-        statusDiv.textContent = 'Unauthorized, please log in again';
-        showLoginForm();  
-      } else {
-        statusDiv.textContent = 'Some scripts failed, please check!';
+      function showDashboard() {
+        document.querySelector('.loading-container').style.display = 'none';
+        document.querySelector('.login-container').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        fetchResults();
       }
-    } catch (error) {
-      statusDiv.textContent = 'Error: ' + error.message;
-    }
-  }
 
-  // Function to fetch and display results
-  async function fetchResults() {
-    try {
-      const response = await fetch('/results');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.authenticated) {
-          displayResults(data.results);
-        } else {
+      async function checkAuth() {
+        try {
+          const response = await fetch('/check-auth');
+          const data = await response.json();
+          if (data.authenticated) {
+            showDashboard();
+          } else {
+            showLoginForm();
+          }
+        } catch (error) {
+          console.error('Auth check failed:', error);
           showLoginForm();
         }
-      } else {
-        console.error('Failed to fetch results');
-        showLoginForm();
       }
-    } catch (error) {
-      console.error('Error fetching results:', error);
-      showLoginForm();
-    }
-  }
 
-  // Function to display results in the dashboard
-  function displayResults(results) {
-    const grid = document.getElementById('resultsGrid');
-    grid.innerHTML = '';
-    const theme = document.body.classList.contains('dark') ? 'dark' : 'light';
-    
-    results.forEach(result => {
-      const card = document.createElement('div');
-      card.className = 'account-card ' + theme;
-      
-      let panelInfo;
-      if (result.type === 'ct8') {
-        panelInfo = 'CT8';
-      } else {
-        panelInfo = 'Serv00 ' + result.panelnum + ' Area';
-      }
-      
-      const avatarUrl = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(result.username);
-      
-      card.innerHTML = 
-        '<div class="account-header ' + theme + '">' +
-          '<div class="account-info-group">' +
-            '<div class="account-avatar ' + theme + '">' +
-              '<img src="' + avatarUrl + '" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%;">' +
-            '</div>' +
-            '<div class="account-info">' +
-              '<div class="account-name ' + theme + '">' + result.username + '</div>' +
-              '<div class="account-type ' + theme + '">' +
-                '<span>' + panelInfo + '</span>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<button onclick="runSingleAccount(\\\'' + result.username + '\\\')" class="run-single-btn ' + theme + '">' +
-            'Run' +
-          '</button>' +
-        '</div>' +
-        '<div class="cron-results-container">' +
-          result.cronResults.map(cronResult => {
-            const statusIcon = cronResult.success ? 'check_circle' : 'error';
-            return '<div class="cron-item ' + theme + '">' +
-              '<div class="cron-header">' +
-                '<div class="cron-status">' +
-                  '<i class="material-icons-round ' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    statusIcon +
-                  '</i>' +
-                  '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    (cronResult.success ? 'success' : 'failed') +
-                  '</span>' +
-                '</div>' +
-                '<div class="last-run ' + theme + '">' +
-                  '<i class="material-icons-round">schedule</i>' +
-                  '<span>' + new Date(result.lastRun).toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }) + '</span>' +
-                '</div>' +
-              '</div>' +
-              '<div class="message-toggle ' + theme + '" onclick="toggleMessage(this)">View Script ▼</div>' +
-              '<div class="cron-message ' + theme + ' ' + (cronResult.success ? 'success' : 'failed') + '">' + 
-                cronResult.message + 
-              '</div>' +
-            '</div>';
-          }).join('') +
-        '</div>';
-      
-      grid.appendChild(card);
-    });
-
-    document.querySelectorAll('.message-toggle').forEach(toggle => {
-      toggle.addEventListener('click', function() {
-        const message = this.nextElementSibling;
-        const isShown = message.classList.contains('show');
-        message.classList.toggle('show');
-        this.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-      });
-    });
-  }
-
-  // Event listener to toggle the visibility of script messages
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('message-toggle')) {
-      const messageElement = e.target.nextElementSibling;
-      const isShown = messageElement.classList.contains('show');
-      
-      messageElement.classList.toggle('show');
-      e.target.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-    }
-  });
-
-  // Set the initial status bar color based on the system theme
-  document.addEventListener('DOMContentLoaded', () => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    
-    // Set initial theme
-    if (prefersDark) {
-      document.body.classList.add('dark');
-      document.body.classList.remove('light');
-      metaThemeColor.setAttribute('content', '#000000');
-      
-      // Update all elements with theme classes
-      document.querySelectorAll('[class*="light"]').forEach(element => {
-        element.classList.remove('light');
-        element.classList.add('dark');
-      });
-      
-      // Update theme toggle button
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.classList.remove('light');
-        themeToggle.classList.add('dark');
-        themeToggle.innerHTML = '<i class="material-icons-round">dark_mode</i>';
-      }
-    } else {
-      document.body.classList.add('light');
-      document.body.classList.remove('dark');
-      metaThemeColor.setAttribute('content', '#ffffff');
-      
-      // Update all elements with theme classes
-      document.querySelectorAll('[class*="dark"]').forEach(element => {
-        element.classList.remove('dark');
-        element.classList.add('light');
-      });
-      
-      // Update theme toggle button
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.classList.remove('dark');
-        themeToggle.classList.add('light');
-        themeToggle.innerHTML = '<i class="material-icons-round">light_mode</i>';
-      }
-    }
-  });
-
-  // Set dynamic year
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // Function to run a single account's script
-  async function runSingleAccount(username) {
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = 'Running ' + username + ' account script...';
-    
-    try {
-      const response = await fetch('/run-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username })
-      });
-      
-      if (response.ok) {
+      async function login() {
+        password = document.getElementById('password').value;
+        const formData = new FormData();
+        formData.append('password', password);
+        const response = await fetch('/login', { 
+          method: 'POST',
+          body: formData
+        });
         const result = await response.json();
-        const results = await (await fetch('/results')).json();
-        if (results.authenticated) {
-          displayResults(results.results);
-          statusDiv.textContent = username + ' account script completed!';
-        }
-      } else if (response.status === 401) {
-        statusDiv.textContent = 'Unauthorized. Please log in again';
-        showLoginForm();
-      } else {
-        statusDiv.textContent = username + ' account script execution error!';
-      }
-    } catch (error) {
-      statusDiv.textContent = 'Error: ' + error.message;
-    }
-  }
-
-  // Function to toggle the visibility of script messages
-  function toggleMessage(element) {
-    const message = element.nextElementSibling;
-    const isShown = message.classList.contains('show');
-    message.classList.toggle('show');
-    element.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-  }
-
-<div class="page-container">
-  <div class="content-wrapper">
-    <!-- Login container -->
-    <div class="login-container">
-      <div id="loginForm" class="light">
-        <div class="logo">
-          <span>Serv00 Monitor</span>
-        </div>
-        <input type="password" id="password" placeholder="Password" class="light">
-        <button onclick="login()" class="light">Login</button>
-      </div>
-    </div>
-
-    <!-- Dashboard -->
-    <div id="dashboard" class="light">
-      <div class="dashboard-header">
-        <h1>Serv00 Monitor</h1>
-        <h3>Serv00 Panel for Cloudflare Workers</h3>
-        <button onclick="runScript()" class="light">Run All Scripts</button>
-      </div>
-      <div id="status"></div>
-      <div id="resultsGrid" class="dashboard-grid"></div>
-      
-      <!-- Add footer -->
-      <footer class="footer light">
-        <span>&copy; MJJ <span id="year"></span> . All rights reserved.</span>
-      </footer>
-    </div>
-  </div>
-</div>
-
-<script>
-  let password = '';
-
-  function showLoginForm() {
-    document.querySelector('.loading-container').style.display = 'none';
-    document.querySelector('.login-container').style.display = 'block';
-    document.getElementById('dashboard').style.display = 'none';
-  }
-
-  function showDashboard() {
-    document.querySelector('.loading-container').style.display = 'none';
-    document.querySelector('.login-container').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-    fetchResults();
-  }
-
-  async function checkAuth() {
-    try {
-      const response = await fetch('/check-auth');
-      const data = await response.json();
-      if (data.authenticated) {
-        showDashboard();
-      } else {
-        showLoginForm();
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      showLoginForm();
-    }
-  }
-
-  async function login() {
-    password = document.getElementById('password').value;
-    const formData = new FormData();
-    formData.append('password', password);
-    const response = await fetch('/login', { 
-      method: 'POST',
-      body: formData
-    });
-    const result = await response.json();
-    if (result.success) {
-      showDashboard();
-    } else {
-      alert('Incorrect password');
-    }
-  }
-
-  function toggleTheme() {
-    const body = document.body;
-    const isDark = body.classList.contains('dark');
-    const newTheme = isDark ? 'light' : 'dark';
-    
-    // Update status bar color
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    if (newTheme === 'dark') {
-      metaThemeColor.setAttribute('content', '#000000'); // Black for dark mode
-    } else {
-      metaThemeColor.setAttribute('content', '#ffffff'); // White for light mode
-    }
-    
-    // Original theme toggle logic
-    document.querySelectorAll('[class*="dark"], [class*="light"]').forEach(element => {
-      element.classList.remove('dark', 'light');
-      element.classList.add(newTheme);
-    });
-
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-      themeToggle.innerHTML = '<i class="material-icons-round">' + 
-        (newTheme === 'dark' ? 'dark_mode' : 'light_mode') + '</i>';
-    }
-
-    // Update footer style
-    const footer = document.querySelector('.footer');
-    if (footer) {
-      footer.classList.remove('dark', 'light');
-      footer.classList.add(newTheme);
-    }
-
-    // Update dashboard-header button style
-    const dashboardButton = document.querySelector('.dashboard-header button');
-    if (dashboardButton) {
-      dashboardButton.className = 'light';
-      dashboardButton.classList.add(newTheme);
-    }
-  }
-
-  document.getElementById('password').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-      login();
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', checkAuth);
-
-  async function runScript() {
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = 'Running all scripts, please wait a few minutes...';
-    try {
-      const response = await fetch('/run', { method: 'POST' });
-      if (response.ok) {
-        const results = await response.json();
-        displayResults(results);
-        statusDiv.textContent = 'All scripts have been successfully executed!';
-      } else if (response.status === 401) {
-        statusDiv.textContent = 'Unauthorized, please log in again';
-        showLoginForm();  
-      } else {
-        statusDiv.textContent = 'Some scripts failed, please check!';
-      }
-    } catch (error) {
-      statusDiv.textContent = 'Error: ' + error.message;
-    }
-  }
-
-  async function fetchResults() {
-    try {
-      const response = await fetch('/results');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.authenticated) {
-          displayResults(data.results);
+        if (result.success) {
+          showDashboard();
         } else {
+          alert('Incorrect password');
+        }
+      }
+
+      function toggleTheme() {
+        const body = document.body;
+        const isDark = body.classList.contains('dark');
+        const newTheme = isDark ? 'light' : 'dark';
+        
+        // 更新状态栏颜色
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        if (newTheme === 'dark') {
+          metaThemeColor.setAttribute('content', '#000000'); // 深色模式使用黑色
+        } else {
+          metaThemeColor.setAttribute('content', '#ffffff'); // 浅色模式使用白色
+        }
+        
+        // 原有的主题切换逻辑
+        document.querySelectorAll('[class*="dark"], [class*="light"]').forEach(element => {
+          element.classList.remove('dark', 'light');
+          element.classList.add(newTheme);
+        });
+
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+          themeToggle.innerHTML = '<i class="material-icons-round">' + 
+            (newTheme === 'dark' ? 'dark_mode' : 'light_mode') + '</i>';
+        }
+
+        // 更新页脚样式
+        const footer = document.querySelector('.footer');
+        if (footer) {
+          footer.classList.remove('dark', 'light');
+          footer.classList.add(newTheme);
+        }
+
+        // 更新 dashboard-header 按钮样式
+        const dashboardButton = document.querySelector('.dashboard-header button');
+        if (dashboardButton) {
+          dashboardButton.className = 'light';
+          dashboardButton.classList.add(newTheme);
+        }
+      }
+
+      document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+          login();
+        }
+      });
+
+      document.addEventListener('DOMContentLoaded', checkAuth);
+
+      async function runScript() {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = '全部脚本执行中，耐心等待几分钟...';
+        try {
+          const response = await fetch('/run', { method: 'POST' });
+          if (response.ok) {
+            const results = await response.json();
+            displayResults(results);
+            statusDiv.textContent = '全部脚本已成功执行完毕!';
+          } else if (response.status === 401) {
+            statusDiv.textContent = '未经授权，请重新登录';
+            showLoginForm();  
+          } else {
+            statusDiv.textContent = '部分脚本执行出错，自行检查!';
+          }
+        } catch (error) {
+          statusDiv.textContent = '错误: ' + error.message;
+        }
+      }
+
+      async function fetchResults() {
+        try {
+          const response = await fetch('/results');
+          if (response.ok) {
+            const data = await response.json();
+            if (data.authenticated) {
+              displayResults(data.results);
+            } else {
+              showLoginForm();
+            }
+          } else {
+            console.error('Failed to fetch results');
+            showLoginForm();
+          }
+        } catch (error) {
+          console.error('Error fetching results:', error);
           showLoginForm();
         }
-      } else {
-        console.error('Failed to fetch results');
-        showLoginForm();
       }
-    } catch (error) {
-      console.error('Error fetching results:', error);
-      showLoginForm();
-    }
-  }
 
-  function displayResults(results) {
-    const grid = document.getElementById('resultsGrid');
-    grid.innerHTML = '';
-    const theme = document.body.classList.contains('dark') ? 'dark' : 'light';
-    
-    results.forEach(result => {
-      const card = document.createElement('div');
-      card.className = 'account-card ' + theme;
-      
-      let panelInfo;
-      if (result.type === 'ct8') {
-        panelInfo = 'CT8';
-      } else {
-        panelInfo = 'Serv00 ' + result.panelnum + ' Area';
-      }
-      
-      const avatarUrl = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(result.username);
-      
-      card.innerHTML = 
-        '<div class="account-header ' + theme + '">' +
-          '<div class="account-info-group">' +
-            '<div class="account-avatar ' + theme + '">' +
-              '<img src="' + avatarUrl + '" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%;">' +
-            '</div>' +
-            '<div class="account-info">' +
-              '<div class="account-name ' + theme + '">' + result.username + '</div>' +
-              '<div class="account-type ' + theme + '">' +
-                '<span>' + panelInfo + '</span>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<button onclick="runSingleAccount(\\\'' + result.username + '\\\')" class="run-single-btn ' + theme + '">' +
-            'Run' +
-          '</button>' +
-        '</div>' +
-        '<div class="cron-results-container">' +
-          result.cronResults.map(cronResult => {
-            const statusIcon = cronResult.success ? 'check_circle' : 'error';
-            return '<div class="cron-item ' + theme + '">' +
-              '<div class="cron-header">' +
-                '<div class="cron-status">' +
-                  '<i class="material-icons-round ' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    statusIcon +
-                  '</i>' +
-                  '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    (cronResult.success ? 'success' : 'failed') +
-                  '</span>' +
+      function displayResults(results) {
+        const grid = document.getElementById('resultsGrid');
+        grid.innerHTML = '';
+        const theme = document.body.classList.contains('dark') ? 'dark' : 'light';
+        
+        results.forEach(result => {
+          const card = document.createElement('div');
+          card.className = 'account-card ' + theme;
+          
+          let panelInfo;
+          if (result.type === 'ct8') {
+            panelInfo = 'CT8';
+          } else {
+            panelInfo = 'Serv00 ' + result.panelnum + '区';
+          }
+          
+          const avatarUrl = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(result.username);
+          
+          card.innerHTML = 
+            '<div class="account-header ' + theme + '">' +
+              '<div class="account-info-group">' +
+                '<div class="account-avatar ' + theme + '">' +
+                  '<img src="' + avatarUrl + '" alt="avatar" style="width: 100%; height: 100%; border-radius: 50%;">' +
                 '</div>' +
-                '<div class="last-run ' + theme + '">' +
-                  '<i class="material-icons-round">schedule</i>' +
-                  '<span>' + new Date(result.lastRun).toLocaleString(undefined, {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }) + '</span>' +
+                '<div class="account-info">' +
+                  '<div class="account-name ' + theme + '">' + result.username + '</div>' +
+                  '<div class="account-type ' + theme + '">' +
+                    '<span>' + panelInfo + '</span>' +
+                  '</div>' +
                 '</div>' +
               '</div>' +
-              '<div class="message-toggle ' + theme + '" onclick="toggleMessage(this)">View Script ▼</div>' +
-              '<div class="cron-message ' + theme + ' ' + (cronResult.success ? 'success' : 'failed') + '">' + 
-                cronResult.message + 
-              '</div>' +
+              '<button onclick="runSingleAccount(\\\'' + result.username + '\\\')" class="run-single-btn ' + theme + '">' +
+                '运 行' +
+              '</button>' +
+            '</div>' +
+            '<div class="cron-results-container">' +
+              result.cronResults.map(cronResult => {
+                const statusIcon = cronResult.success ? 'check_circle' : 'error';
+                return '<div class="cron-item ' + theme + '">' +
+                  '<div class="cron-header">' +
+                    '<div class="cron-status">' +
+                      '<i class="material-icons-round ' + (cronResult.success ? 'success' : 'failed') + '">' +
+                        statusIcon +
+                      '</i>' +
+                      '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
+                        (cronResult.success ? 'success' : 'failed') +
+                      '</span>' +
+                    '</div>' +
+                    '<div class="last-run ' + theme + '">' +
+                      '<i class="material-icons-round">schedule</i>' +
+                      '<span>' + new Date(result.lastRun).toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }) + '</span>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="message-toggle ' + theme + '" onclick="toggleMessage(this)">查看脚本 ▼</div>' +
+                  '<div class="cron-message ' + theme + ' ' + (cronResult.success ? 'success' : 'failed') + '">' + 
+                    cronResult.message + 
+                  '</div>' +
+                '</div>';
+              }).join('') +
             '</div>';
-          }).join('') +
-        '</div>';
-      
-      grid.appendChild(card);
-    });
+          
+          grid.appendChild(card);
+        });
 
-    document.querySelectorAll('.message-toggle').forEach(toggle => {
-      toggle.addEventListener('click', function() {
-        const message = this.nextElementSibling;
+        document.querySelectorAll('.message-toggle').forEach(toggle => {
+          toggle.addEventListener('click', function() {
+            const message = this.nextElementSibling;
+            const isShown = message.classList.contains('show');
+            message.classList.toggle('show');
+            this.textContent = isShown ? '查看脚本 ▼' : '隐藏脚本 ▲';
+          });
+        });
+      }
+
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('message-toggle')) {
+          const messageElement = e.target.nextElementSibling;
+          const isShown = messageElement.classList.contains('show');
+          
+          messageElement.classList.toggle('show');
+          e.target.textContent = isShown ? '查看脚本 ▼' : '隐藏脚本 ▲';
+        }
+      });
+
+      // 在页面加载时根据系统主题设置初始状态栏颜色
+      document.addEventListener('DOMContentLoaded', () => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        
+        // 设置初始主题
+        if (prefersDark) {
+          document.body.classList.add('dark');
+          document.body.classList.remove('light');
+          metaThemeColor.setAttribute('content', '#000000');
+          
+          // 更新所有带主题类的元素
+          document.querySelectorAll('[class*="light"]').forEach(element => {
+            element.classList.remove('light');
+            element.classList.add('dark');
+          });
+          
+          // 更新主题切换按钮
+          const themeToggle = document.getElementById('themeToggle');
+          if (themeToggle) {
+            themeToggle.classList.remove('light');
+            themeToggle.classList.add('dark');
+            themeToggle.innerHTML = '<i class="material-icons-round">dark_mode</i>';
+          }
+        } else {
+          document.body.classList.add('light');
+          document.body.classList.remove('dark');
+          metaThemeColor.setAttribute('content', '#ffffff');
+          
+          // 更新所有带主题类的元素
+          document.querySelectorAll('[class*="dark"]').forEach(element => {
+            element.classList.remove('dark');
+            element.classList.add('light');
+          });
+          
+          // 更新主题切换按钮
+          const themeToggle = document.getElementById('themeToggle');
+          if (themeToggle) {
+            themeToggle.classList.remove('dark');
+            themeToggle.classList.add('light');
+            themeToggle.innerHTML = '<i class="material-icons-round">light_mode</i>';
+          }
+        }
+      });
+
+      // 设置动态年份
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // 添加单独运行账号的函数
+      async function runSingleAccount(username) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = '正在运行 ' + username + ' 账号脚本...';
+        
+        try {
+          const response = await fetch('/run-account', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const results = await (await fetch('/results')).json();
+            if (results.authenticated) {
+              displayResults(results.results);
+              statusDiv.textContent = username + ' 账号脚本已完成!';
+            }
+          } else if (response.status === 401) {
+            statusDiv.textContent = '未授权。请重新登录';
+            showLoginForm();
+          } else {
+            statusDiv.textContent = username + ' 账号脚本执行出错!';
+          }
+        } catch (error) {
+          statusDiv.textContent = '错误: ' + error.message;
+        }
+      }
+
+      function toggleMessage(element) {
+        const message = element.nextElementSibling;
         const isShown = message.classList.contains('show');
         message.classList.toggle('show');
-        this.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-      });
-    });
+        element.textContent = isShown ? '查看脚本 ▼' : '隐藏脚本 ▲';
+      }
+    </script>
+  </body>
+  </html>
+  `;
+}
+
+async function handleScheduled(scheduledTime) {
+  const accountsData = JSON.parse(ACCOUNTS_JSON);
+  const accounts = accountsData.accounts;
+  
+  let results = [];
+  for (const account of accounts) {
+    const result = await loginAccount(account);
+    results.push(result);
+    await delay(Math.floor(Math.random() * 8000) + 1000);
   }
 
-  document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('message-toggle')) {
-      const messageElement = e.target.nextElementSibling;
-      const isShown = messageElement.classList.contains('show');
-      
-      messageElement.classList.toggle('show');
-      e.target.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-    }
-  });
-
-  // Set the initial status bar color based on the system theme
-  document.addEventListener('DOMContentLoaded', () => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    
-    // Set initial theme
-    if (prefersDark) {
-      document.body.classList.add('dark');
-      document.body.classList.remove('light');
-      metaThemeColor.setAttribute('content', '#000000');
-      
-      // Update all elements with theme classes
-      document.querySelectorAll('[class*="light"]').forEach(element => {
-        element.classList.remove('light');
-        element.classList.add('dark');
-      });
-      
-      // Update theme toggle button
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.classList.remove('light');
-        themeToggle.classList.add('dark');
-        themeToggle.innerHTML = '<i class="material-icons-round">dark_mode</i>';
-      }
-    } else {
-      document.body.classList.add('light');
-      document.body.classList.remove('dark');
-      metaThemeColor.setAttribute('content', '#ffffff');
-      
-      // Update all elements with theme classes
-      document.querySelectorAll('[class*="dark"]').forEach(element => {
-        element.classList.remove('dark');
-        element.classList.add('light');
-      });
-      
-      // Update theme toggle button
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.classList.remove('dark');
-        themeToggle.classList.add('light');
-        themeToggle.innerHTML = '<i class="material-icons-round">light_mode</i>';
-      }
-    }
-  });
-
-  // Set dynamic year
-  document.getElementById('year').textContent = new Date().getFullYear();
-
-  // Add function to run a single account
-  async function runSingleAccount(username) {
-    const statusDiv = document.getElementById('status');
-    statusDiv.textContent = 'Running ' + username + ' account script...';
-    
-    try {
-      const response = await fetch('/run-account', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ username })
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        const results = await (await fetch('/results')).json();
-        if (results.authenticated) {
-          displayResults(results.results);
-          statusDiv.textContent = username + ' account script completed!';
-        }
-      } else if (response.status === 401) {
-        statusDiv.textContent = 'Unauthorized. Please log in again';
-        showLoginForm();
-      } else {
-        statusDiv.textContent = username + ' account script execution error!';
-      }
-    } catch (error) {
-      statusDiv.textContent = 'Error: ' + error.message;
-    }
-  }
-
-  function toggleMessage(element) {
-    const message = element.nextElementSibling;
-    const isShown = message.classList.contains('show');
-    message.classList.toggle('show');
-    element.textContent = isShown ? 'View Script ▼' : 'Hide Script ▲';
-  }
+  // 保存结果到 KV 存储
+  await CRON_RESULTS.put('lastResults', JSON.stringify(results));
+}
 
 function generateRandomUserAgent() {
   const browsers = ['Chrome', 'Firefox', 'Safari', 'Edge', 'Opera'];
@@ -1461,171 +1395,171 @@ async function loginAccount(account) {
 
     const initialCookies = response.headers.get('set-cookie') || ''
 
-const formData = new URLSearchParams({
-  'username': username,
-  'password': password,
-  'csrfmiddlewaretoken': csrfToken,
-  'next': '/cron/'
-})
+    const formData = new URLSearchParams({
+      'username': username,
+      'password': password,
+      'csrfmiddlewaretoken': csrfToken,
+      'next': '/cron/'
+    })
 
-const loginResponse = await fetch(loginUrl, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/x-www-form-urlencoded',
-    'Referer': loginUrl,
-    'User-Agent': userAgent,
-    'Cookie': initialCookies,
-  },
-  body: formData.toString(),
-  redirect: 'manual'
-})
+    const loginResponse = await fetch(loginUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Referer': loginUrl,
+        'User-Agent': userAgent,
+        'Cookie': initialCookies,
+      },
+      body: formData.toString(),
+      redirect: 'manual'
+    })
 
-if (loginResponse.status === 302 && loginResponse.headers.get('location') === '/cron/') {
-  const loginCookies = loginResponse.headers.get('set-cookie') || ''
-  const allCookies = combineCookies(initialCookies, loginCookies)
+    if (loginResponse.status === 302 && loginResponse.headers.get('location') === '/cron/') {
+      const loginCookies = loginResponse.headers.get('set-cookie') || ''
+      const allCookies = combineCookies(initialCookies, loginCookies)
 
-  // Access cron list page
-  const cronListUrl = `${baseUrl}/cron/`
-  const cronListResponse = await fetch(cronListUrl, {
-    headers: {
-      'Cookie': allCookies,
-      'User-Agent': userAgent,
-    }
-  })
-  const cronListContent = await cronListResponse.text()
-
-  console.log(`Cron list URL: ${cronListUrl}`)
-  console.log(`Cron list response status: ${cronListResponse.status}`)
-  console.log(`Cron list content (first 1000 chars): ${cronListContent.substring(0, 1000)}`)
-
-  let cronResults = [];
-  for (const cronCommand of cronCommands) {
-    if (!cronListContent.includes(cronCommand)) {
-      // Access the add cron task page
-      const addCronUrl = `${baseUrl}/cron/add`
-      const addCronPageResponse = await fetch(addCronUrl, {
+      // 访问 cron 列表页面
+      const cronListUrl = `${baseUrl}/cron/`
+      const cronListResponse = await fetch(cronListUrl, {
         headers: {
           'Cookie': allCookies,
           'User-Agent': userAgent,
-          'Referer': cronListUrl,
         }
       })
-      const addCronPageContent = await addCronPageResponse.text()
+      const cronListContent = await cronListResponse.text()
 
-      console.log(`Add cron page URL: ${addCronUrl}`)
-      console.log(`Add cron page response status: ${addCronPageResponse.status}`)
-      console.log(`Add cron page content (first 1000 chars): ${addCronPageContent.substring(0, 1000)}`)
+      console.log(`Cron list URL: ${cronListUrl}`)
+      console.log(`Cron list response status: ${cronListResponse.status}`)
+      console.log(`Cron list content (first 1000 chars): ${cronListContent.substring(0, 1000)}`)
 
-      const newCsrfMatch = addCronPageContent.match(/name="csrfmiddlewaretoken" value="([^"]*)"/)
-      const newCsrfToken = newCsrfMatch ? newCsrfMatch[1] : null
-
-      if (!newCsrfToken) {
-        throw new Error('New CSRF token not found for adding cron task')
-      }
-
-      const formData = new URLSearchParams({
-        'csrfmiddlewaretoken': newCsrfToken,
-        'spec': 'manual',
-        'minute_time_interval': 'on',
-        'minute': '15',
-        'hour_time_interval': 'each',
-        'hour': '*',
-        'day_time_interval': 'each',
-        'day': '*',
-        'month_time_interval': 'each',
-        'month': '*',
-        'dow_time_interval': 'each',
-        'dow': '*',
-        'command': cronCommand,
-        'comment': 'Auto added cron job'
-      })
-
-      console.log('Form data being sent:', formData.toString())
-
-      const { success, response: addCronResponse, content: addCronResponseContent } = await addCronWithRetry(addCronUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Cookie': allCookies,
-          'User-Agent': userAgent,
-          'Referer': addCronUrl,
-          'Origin': baseUrl,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Upgrade-Insecure-Requests': '1'
-        },
-        body: formData.toString(),
-      })
-
-      console.log('Full response content:', addCronResponseContent)
-
-      if (success) {
-        if (addCronResponseContent.includes('Cron job has been added') || addCronResponseContent.includes('Zadanie cron zostało dodane')) {
-          const message = `Added new cron job: ${cronCommand}`;
-          console.log(message);
-          await sendTelegramMessage(`Account ${username} (${type}) ${message}`);
-          cronResults.push({ success: true, message });
-        } else {
-          // If success message is not found in the response, recheck the cron list
-          const checkCronListResponse = await fetch(cronListUrl, {
+      let cronResults = [];
+      for (const cronCommand of cronCommands) {
+        if (!cronListContent.includes(cronCommand)) {
+          // 访问添加 cron 任务页面
+          const addCronUrl = `${baseUrl}/cron/add`
+          const addCronPageResponse = await fetch(addCronUrl, {
             headers: {
               'Cookie': allCookies,
               'User-Agent': userAgent,
+              'Referer': cronListUrl,
             }
-          });
-          const checkCronListContent = await checkCronListResponse.text();
-          
-          if (checkCronListContent.includes(cronCommand)) {
-            const message = `Added new cron job: ${cronCommand}`;
-            console.log(message);
-            await sendTelegramMessage(`Account ${username} (${type}) ${message}`);
-            cronResults.push({ success: true, message });
+          })
+          const addCronPageContent = await addCronPageResponse.text()
+
+          console.log(`Add cron page URL: ${addCronUrl}`)
+          console.log(`Add cron page response status: ${addCronPageResponse.status}`)
+          console.log(`Add cron page content (first 1000 chars): ${addCronPageContent.substring(0, 1000)}`)
+
+          const newCsrfMatch = addCronPageContent.match(/name="csrfmiddlewaretoken" value="([^"]*)"/)
+          const newCsrfToken = newCsrfMatch ? newCsrfMatch[1] : null
+
+          if (!newCsrfToken) {
+            throw new Error('New CSRF token not found for adding cron task')
+          }
+
+          const formData = new URLSearchParams({
+            'csrfmiddlewaretoken': newCsrfToken,
+            'spec': 'manual',
+            'minute_time_interval': 'on',
+            'minute': '15',
+            'hour_time_interval': 'each',
+            'hour': '*',
+            'day_time_interval': 'each',
+            'day': '*',
+            'month_time_interval': 'each',
+            'month': '*',
+            'dow_time_interval': 'each',
+            'dow': '*',
+            'command': cronCommand,
+            'comment': 'Auto added cron job'
+          })
+
+          console.log('Form data being sent:', formData.toString())
+
+          const { success, response: addCronResponse, content: addCronResponseContent } = await addCronWithRetry(addCronUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'Cookie': allCookies,
+              'User-Agent': userAgent,
+              'Referer': addCronUrl,
+              'Origin': baseUrl,
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.5',
+              'Upgrade-Insecure-Requests': '1'
+            },
+            body: formData.toString(),
+          })
+
+          console.log('Full response content:', addCronResponseContent)
+
+          if (success) {
+            if (addCronResponseContent.includes('Cron job has been added') || addCronResponseContent.includes('Zadanie cron zostało dodane')) {
+              const message = `添加新的 cron 任务：${cronCommand}`;
+              console.log(message);
+              await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
+              cronResults.push({ success: true, message });
+            } else {
+              // 如果响应中没有成功信息，再次检查cron列表
+              const checkCronListResponse = await fetch(cronListUrl, {
+                headers: {
+                  'Cookie': allCookies,
+                  'User-Agent': userAgent,
+                }
+              });
+              const checkCronListContent = await checkCronListResponse.text();
+              
+              if (checkCronListContent.includes(cronCommand)) {
+                const message = `添加了新的 cron 任务：${cronCommand}`;
+                console.log(message);
+                await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
+                cronResults.push({ success: true, message });
+              } else {
+                const message = `尝试添加 cron 任务：${cronCommand}，但在列表中找不到可能添加失败`;
+                console.error(message);
+                cronResults.push({ success: false, message });
+              }
+            }
           } else {
-            const message = `Tried to add cron job: ${cronCommand}, but couldn't find it in the list (may have failed)`;
+            const message = `添加 cron 任务失败：${cronCommand}`;
             console.error(message);
             cronResults.push({ success: false, message });
           }
+        } else {
+          const message = `${cronCommand}`;
+          console.log(message);
+          cronResults.push({ success: true, message });
         }
-      } else {
-        const message = `Failed to add cron job: ${cronCommand}`;
-        console.error(message);
-        cronResults.push({ success: false, message });
       }
+      return { 
+        username, 
+        type, 
+        panelnum,
+        cronResults, 
+        lastRun: new Date().toISOString() 
+      };
     } else {
-      const message = `${cronCommand}`;
-      console.log(message);
-      cronResults.push({ success: true, message });
+      const message = `登录失败，未找到原因。请检查账号和密码是否正确`;
+      console.error(message);
+      return { 
+        username, 
+        type, 
+        panelnum,
+        cronResults: [{ success: false, message }], 
+        lastRun: new Date().toISOString() 
+      };
     }
+  } catch (error) {
+    const message = `登录或添加 cron 任务时现错误: ${error.message}`;
+    console.error(message);
+    return { 
+      username, 
+      type, 
+      panelnum,
+      cronResults: [{ success: false, message }], 
+      lastRun: new Date().toISOString() 
+    };
   }
-  return { 
-    username, 
-    type, 
-    panelnum,
-    cronResults, 
-    lastRun: new Date().toISOString() 
-  };
-} else {
-  const message = `Login failed, reason not found. Please check if the username and password are correct`;
-  console.error(message);
-  return { 
-    username, 
-    type, 
-    panelnum,
-    cronResults: [{ success: false, message }], 
-    lastRun: new Date().toISOString() 
-  };
-}
-} catch (error) {
-  const message = `Error occurred during login or adding cron task: ${error.message}`;
-  console.error(message);
-  return { 
-    username, 
-    type, 
-    panelnum,
-    cronResults: [{ success: false, message }], 
-    lastRun: new Date().toISOString() 
-  };
-}
 }
 
 async function addCronWithRetry(url, options, maxRetries = 3) {
