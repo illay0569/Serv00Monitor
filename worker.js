@@ -48,6 +48,42 @@ async function handleRequest(request) {
     return new Response(JSON.stringify({ authenticated: isAuthenticated(request) }), {
       headers: { 'Content-Type': 'application/json' }
     })
+  } else if (url.pathname === '/run-account' && request.method === 'POST') {
+    if (!isAuthenticated(request)) {
+      return new Response('Unauthorized', { status: 401 })
+    }
+    
+    // 获取要运行的账号用户名
+    const data = await request.json()
+    const username = data.username
+    
+    // 从配置中找到对应账号
+    const accountsData = JSON.parse(ACCOUNTS_JSON)
+    const account = accountsData.accounts.find(acc => acc.username === username)
+    
+    if (!account) {
+      return new Response(JSON.stringify({ error: 'Account not found' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
+    // 只运行这一个账号
+    const result = await loginAccount(account)
+    
+    // 获取之前的结果并更新
+    let allResults = await CRON_RESULTS.get('lastResults', 'json') || []
+    const index = allResults.findIndex(r => r.username === username)
+    if (index >= 0) {
+      allResults[index] = result
+    } else {
+      allResults.push(result)
+    }
+    await CRON_RESULTS.put('lastResults', JSON.stringify(allResults))
+
+    return new Response(JSON.stringify(result), {
+      headers: { 'Content-Type': 'application/json' }
+    })
   } else {
     // 显示登录页面或结果页面的 HTML
     return new Response(getHtmlContent(), {
@@ -77,7 +113,7 @@ function getHtmlContent() {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="Serv00 Monitor - 服务器监控面板">
     <meta name="keywords" content="serv00, monitor, dashboard, 监控">
-    <meta name="author" content="Your Name">
+    <meta name="author" content="YYDS666">
     <meta name="theme-color" content="#ee7752">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -327,7 +363,7 @@ function getHtmlContent() {
 
       .dashboard-header h3 {
         color: white;
-        font-size: 1.2rem;
+        font-size: 1rem;
         font-weight: 400;
         opacity: 0.7;
       }
@@ -411,12 +447,15 @@ function getHtmlContent() {
 
       .account-card {
         position: relative;
-        padding: 1.5rem 1.5rem 0.3rem 1.5rem;
+        padding: 1.5rem;
         background: var(--light-surface);
         border: 1px solid var(--light-border);
         border-radius: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
       }
 
       .account-card.dark {
@@ -437,9 +476,8 @@ function getHtmlContent() {
       .account-header {
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
-        padding-bottom: 0.5rem;
-        margin-bottom: 0.5rem;
+        align-items: center;
+        gap: 1rem;
       }
 
       .account-header.dark {
@@ -448,7 +486,7 @@ function getHtmlContent() {
 
       .account-info-group {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 1rem;
       }
 
@@ -474,18 +512,22 @@ function getHtmlContent() {
 
       .cron-item {
         position: relative;
-        padding-bottom: 2rem;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 8px;
+        border: 1px solid var(--light-border);
       }
 
       .cron-item.dark {
-        background: var(--dark-surface);
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
       }
 
       .cron-status {
-        position: static;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        margin-bottom: 0.5rem;
       }
 
       .cron-status i {
@@ -493,10 +535,10 @@ function getHtmlContent() {
       }
 
       .cron-message {
-        margin: 0.5rem 0;
-        padding: 1rem;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
         background: var(--light-bg);
-        border-radius: 8px;
+        border-radius: 6px;
         font-family: monospace;
         font-size: 0.875rem;
         line-height: 1.5;
@@ -505,9 +547,7 @@ function getHtmlContent() {
         overflow-wrap: break-word;
         max-height: 150px;
         overflow-y: auto;
-        white-space: pre-line;
         display: none;
-        cursor: pointer;
       }
 
       .cron-message.dark {
@@ -516,15 +556,12 @@ function getHtmlContent() {
       }
 
       .last-run {
-        position: absolute;
-        bottom: 0;
-        right: 0;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0 0 0.5rem 0;
+        gap: 0.25rem;
         font-size: 0.75rem;
         color: var(--light-text-secondary);
+        margin-top: 0.5rem;
       }
 
       .last-run.dark {
@@ -653,115 +690,6 @@ function getHtmlContent() {
       .cron-message.show {
         display: block;
       }
-
-      .message-toggle {
-        color: var(--light-text-secondary);
-        font-size: 0.875rem;
-        cursor: pointer;
-        padding: 0.5rem 0;
-        user-select: none;
-      }
-
-      .message-toggle.dark {
-        color: var(--dark-text-secondary);
-      }
-
-      /* 修改登录按钮样式 */
-      #loginForm button {
-        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
-        transition: all 0.3s ease;
-      }
-
-      #loginForm button:hover {
-        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
-      }
-
-      #loginForm button.dark {
-        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
-      }
-
-      #loginForm button.dark:hover {
-        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
-        box-shadow: 0 4px 12px rgba(96, 165, 250, 0.5);
-      }
-
-      /* 修改输入框样式 */
-      #loginForm input {
-        background: rgba(255, 255, 255, 0.9);
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        transition: all 0.3s ease;
-      }
-
-      #loginForm input:focus {
-        border-color: #3b82f6;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-      }
-
-      #loginForm input.dark {
-        background: rgba(15, 23, 42, 0.9);
-        border-color: rgba(255, 255, 255, 0.1);
-      }
-
-      #loginForm input.dark:focus {
-        border-color: #60a5fa;
-        box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
-      }
-
-      /* 修改 cron-message 相关的所有样式 */
-      .cron-message {
-        margin: 0.5rem 0;
-        padding: 1rem;
-        background: var(--light-bg);
-        border-radius: 8px;
-        font-family: monospace;
-        font-size: 0.875rem;
-        line-height: 1.5;
-        color: var(--light-text);
-        word-break: break-word;
-        overflow-wrap: break-word;
-        max-height: 150px;
-        overflow-y: auto;
-        white-space: pre-line;
-        display: none;
-        cursor: pointer;
-      }
-
-      /* 深色模式基础样式 */
-      .cron-message.dark {
-        background: var(--dark-bg);
-        color: var(--dark-text);
-      }
-
-      /* 成功状态样式 */
-      .cron-message.success {
-        background: var(--success-bg);
-        color: var(--success-color);
-      }
-
-      /* 失败状态样式 */
-      .cron-message.failed {
-        background: var(--failed-bg);
-        color: var(--failed-color);
-      }
-
-      /* 深色模式下的成功状态 */
-      .cron-message.dark.success {
-        background: var(--dark-success-bg);
-        color: var(--dark-message-success-color);
-      }
-
-      /* 深色模式下的失败状态 */
-      .cron-message.dark.failed {
-        background: var(--dark-failed-bg);
-        color: var(--dark-message-failed-color);
-      }
-
-      /* 显示状态 */
-      .cron-message.show {
-        display: block;
-      }
       /* 修改成功状态脚本路径样式 light */
       .cron-message.success.light {
         background: var(--light-bg);
@@ -822,7 +750,7 @@ function getHtmlContent() {
         padding-bottom: 20px;
       }
 
-      /* 内容包装器样式 */
+      /* 内容包器样式 */
       .content-wrapper {
         flex: 1;
         min-height: 100vh;
@@ -870,6 +798,186 @@ function getHtmlContent() {
       .logo span {
         color: inherit;
       }
+
+      .run-single-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 34px;
+        padding: 0;
+        border-radius: 17px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.75rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
+        color: white;
+        margin-left: auto;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .run-single-btn.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61));
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .run-single-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        opacity: 0.95;
+      }
+
+      .run-single-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* 确保渐变色不会被其他样式覆盖 */
+      .run-single-btn,
+      .run-single-btn.light,
+      .run-single-btn.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+      }
+
+      .cron-results-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .cron-item {
+        position: relative;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 8px;
+        border: 1px solid var(--light-border);
+      }
+
+      .cron-item.dark {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+      }
+
+      .cron-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .message-toggle {
+        text-align: center;
+        font-size: 0.875rem;
+        color: var(--light-text-secondary);
+        cursor: pointer;
+        padding: 0.5rem 0;
+        user-select: none;
+        margin: 0.5rem 0;
+      }
+
+      .message-toggle:hover {
+        opacity: 0.8;
+      }
+
+      .cron-message {
+        display: none;
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+        background: var(--light-bg);
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: var(--light-text);
+        word-break: break-word;
+        overflow-wrap: break-word;
+        max-height: 150px;
+        overflow-y: auto;
+        border: 1px solid var(--light-border);
+      }
+
+      .cron-message.dark {
+        background: var(--dark-bg);
+        border-color: var(--dark-border);
+        color: var(--dark-text);
+      }
+
+      .cron-message.show {
+        display: block;
+      }
+
+      /* 修改 cron-header 相关样式 */
+      .cron-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 0.5rem;
+        padding: 0;
+      }
+
+      .cron-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      .last-run {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: var(--light-text-secondary);
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      /* 修改登录按钮样式 */
+      #loginForm button {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+        color: white;
+        width: 100%;
+        padding: 1rem;
+        border-radius: 12px;
+        border: none;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      #loginForm button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      #loginForm button:active {
+        transform: translateY(0);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      #loginForm button.dark {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      /* 确保渐变色不会被其他样式覆盖 */
+      #loginForm button,
+      #loginForm button.light,
+      #loginForm button.dark {
+        background: linear-gradient(to right, rgb(0, 176, 155), rgb(150, 201, 61)) !important;
+        color: white;
+      }
     </style>
   </head>
   <body class="light">
@@ -899,8 +1007,8 @@ function getHtmlContent() {
         <div id="dashboard" class="light">
           <div class="dashboard-header">
             <h1>Serv00 Monitor</h1>
-            <h3>Serv00 Panel of CF Workers</h3>
-            <button onclick="runScript()" class="light">一键运行脚本</button>
+            <h3>Serv00 Panel for Cloudflare Workers</h3>
+            <button onclick="runScript()" class="light">运行全部脚本</button>
           </div>
           <div id="status"></div>
           <div id="resultsGrid" class="dashboard-grid"></div>
@@ -1010,21 +1118,21 @@ function getHtmlContent() {
 
       async function runScript() {
         const statusDiv = document.getElementById('status');
-        statusDiv.textContent = '服务器脚本执行中，耐心等待几分钟...';
+        statusDiv.textContent = '全部脚本执行中，耐心等待几分钟...';
         try {
           const response = await fetch('/run', { method: 'POST' });
           if (response.ok) {
             const results = await response.json();
             displayResults(results);
-            statusDiv.textContent = '所有服务器脚本已成功执行完毕!';
+            statusDiv.textContent = '全部脚本已成功执行完毕!';
           } else if (response.status === 401) {
-            statusDiv.textContent = '未经授权。请重新登录';
+            statusDiv.textContent = '未经授权，请重新登录';
             showLoginForm();  
           } else {
-            statusDiv.textContent = '部分服务器脚本执行出错自行检查!';
+            statusDiv.textContent = '部分脚本执行出错，自行检查!';
           }
         } catch (error) {
-          statusDiv.textContent = 'Error: ' + error.message;
+          statusDiv.textContent = '错误: ' + error.message;
         }
       }
 
@@ -1057,7 +1165,6 @@ function getHtmlContent() {
           const card = document.createElement('div');
           card.className = 'account-card ' + theme;
           
-          // 简化面板信息显示逻辑
           let panelInfo;
           if (result.type === 'ct8') {
             panelInfo = 'CT8';
@@ -1080,32 +1187,52 @@ function getHtmlContent() {
                   '</div>' +
                 '</div>' +
               '</div>' +
+              '<button onclick="runSingleAccount(\\\'' + result.username + '\\\')" class="run-single-btn ' + theme + '">' +
+                '运 行' +
+              '</button>' +
+            '</div>' +
+            '<div class="cron-results-container">' +
               result.cronResults.map(cronResult => {
                 const statusIcon = cronResult.success ? 'check_circle' : 'error';
-                return '<div class="cron-status">' +
-                  '<i class="material-icons-round ' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    statusIcon +
-                  '</i>' +
-                  '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
-                    (cronResult.success ? '成功' : '失败') +
-                  '</span>' +
+                return '<div class="cron-item ' + theme + '">' +
+                  '<div class="cron-header">' +
+                    '<div class="cron-status">' +
+                      '<i class="material-icons-round ' + (cronResult.success ? 'success' : 'failed') + '">' +
+                        statusIcon +
+                      '</i>' +
+                      '<span class="' + (cronResult.success ? 'success' : 'failed') + '">' +
+                        (cronResult.success ? 'success' : 'failed') +
+                      '</span>' +
+                    '</div>' +
+                    '<div class="last-run ' + theme + '">' +
+                      '<i class="material-icons-round">schedule</i>' +
+                      '<span>' + new Date(result.lastRun).toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      }) + '</span>' +
+                    '</div>' +
+                  '</div>' +
+                  '<div class="message-toggle ' + theme + '" onclick="toggleMessage(this)">查看脚本 ▼</div>' +
+                  '<div class="cron-message ' + theme + ' ' + (cronResult.success ? 'success' : 'failed') + '">' + 
+                    cronResult.message + 
+                  '</div>' +
                 '</div>';
               }).join('') +
-            '</div>' +
-            result.cronResults.map(cronResult => {
-              return '<div class="cron-item ' + theme + '">' +
-                '<div class="message-toggle ' + theme + '">查看脚本 ▼</div>' +
-                '<div class="cron-message ' + theme + ' ' + (cronResult.success ? 'success' : 'failed') + '">' + 
-                  cronResult.message + 
-                '</div>' +
-                '<div class="last-run ' + theme + '">' +
-                  '<i class="material-icons-round">schedule</i>' +
-                  '<span>' + new Date(result.lastRun).toLocaleString() + '</span>' +
-                '</div>' +
-              '</div>';
-            }).join('');
+            '</div>';
           
           grid.appendChild(card);
+        });
+
+        document.querySelectorAll('.message-toggle').forEach(toggle => {
+          toggle.addEventListener('click', function() {
+            const message = this.nextElementSibling;
+            const isShown = message.classList.contains('show');
+            message.classList.toggle('show');
+            this.textContent = isShown ? '查看脚本 ▼' : '隐藏脚本 ▲';
+          });
         });
       }
 
@@ -1134,6 +1261,45 @@ function getHtmlContent() {
 
       // 设置动态年份
       document.getElementById('year').textContent = new Date().getFullYear();
+
+      // 添加单独运行账号的函数
+      async function runSingleAccount(username) {
+        const statusDiv = document.getElementById('status');
+        statusDiv.textContent = '正在运行 ' + username + ' 账户脚本...';
+        
+        try {
+          const response = await fetch('/run-account', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username })
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const results = await (await fetch('/results')).json();
+            if (results.authenticated) {
+              displayResults(results.results);
+              statusDiv.textContent = username + ' 账户脚本已完成!';
+            }
+          } else if (response.status === 401) {
+            statusDiv.textContent = '未授权。请重新登录';
+            showLoginForm();
+          } else {
+            statusDiv.textContent = username + ' 账户脚本执行出错!';
+          }
+        } catch (error) {
+          statusDiv.textContent = '错误: ' + error.message;
+        }
+      }
+
+      function toggleMessage(element) {
+        const message = element.nextElementSibling;
+        const isShown = message.classList.contains('show');
+        message.classList.toggle('show');
+        element.textContent = isShown ? '查看脚本 ▼' : '隐藏脚本 ▲';
+      }
     </script>
   </body>
   </html>
@@ -1293,7 +1459,7 @@ async function loginAccount(account) {
 
           if (success) {
             if (addCronResponseContent.includes('Cron job has been added') || addCronResponseContent.includes('Zadanie cron zostało dodane')) {
-              const message = `添加了新的 cron 任务：${cronCommand}`;
+              const message = `添加���新的 cron 任务：${cronCommand}`;
               console.log(message);
               await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
               cronResults.push({ success: true, message });
@@ -1308,12 +1474,12 @@ async function loginAccount(account) {
               const checkCronListContent = await checkCronListResponse.text();
               
               if (checkCronListContent.includes(cronCommand)) {
-                const message = `确认添加了新的 cron 任务：${cronCommand}`;
+                const message = `确实添加了新的 cron 任务：${cronCommand}`;
                 console.log(message);
                 await sendTelegramMessage(`账号 ${username} (${type}) ${message}`);
                 cronResults.push({ success: true, message });
               } else {
-                const message = `尝试添加 cron 任务：${cronCommand}，但在列表中找不到。可能添加失败`;
+                const message = `尝试添加 cron 任务：${cronCommand}，但在列表中找不到可能添加失败`;
                 console.error(message);
                 cronResults.push({ success: false, message });
               }
@@ -1348,7 +1514,7 @@ async function loginAccount(account) {
       };
     }
   } catch (error) {
-    const message = `登录或添加 cron 任务时出现错误: ${error.message}`;
+    const message = `登录或添加 cron 任务时现错误: ${error.message}`;
     console.error(message);
     return { 
       username, 
