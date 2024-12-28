@@ -1122,7 +1122,7 @@ function getHtmlContent() {
 
       async function runScript() {
         const statusDiv = document.getElementById('status');
-        statusDiv.textContent = '全部脚本执行中，耐心等待几分钟...';
+        statusDiv.textContent = 'All scripts are being executed, please wait patiently for a few minutes...';
         try {
           const response = await fetch('/run', { method: 'POST' });
           if (response.ok) {
