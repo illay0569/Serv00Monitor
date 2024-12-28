@@ -1301,7 +1301,7 @@ function getHtmlContent() {
       // 添加单独运行账号的函数
       async function runSingleAccount(username) {
         const statusDiv = document.getElementById('status');
-        statusDiv.textContent = '正在运行 ' + username + ' 账号脚本...';
+        statusDiv.textContent = 'Running ' + username + ' account script...';
         
         try {
           const response = await fetch('/run-account', {
