@@ -1012,7 +1012,7 @@ function getHtmlContent() {
           <div class="dashboard-header">
             <h1>Serv00 Monitor</h1>
             <h3>Serv00 Panel for Cloudflare Workers</h3>
-            <button onclick="runScript()" class="light">运行全部脚本</button>
+            <button onclick="runScript()" class="light">Run all scripts</button>
           </div>
           <div id="status"></div>
           <div id="resultsGrid" class="dashboard-grid"></div>
