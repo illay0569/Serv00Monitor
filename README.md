@@ -1,74 +1,75 @@
 # Serv00 Monitor
 
-一个优雅的 Serv00/CT8 面板监控工具，基于 Cloudflare Workers 构建。
+An elegant Serv00/CT8 panel monitoring tool built on Cloudflare Workers.
 
 ![Serv00 Monitor](/img/Serv00Monitor.jpg)
 
 ![serv00666](/img/serv00666.png)
 
-## Update 大更新!
-- 新增功能，允许用户能够运行单个账户脚本
-- 优化了 UI 界面，文字表达，更新时间去“秒”
+##Major Update!
+- Added functionality to allow running scripts for individual accounts
+- Optimized UI interface and text, removed seconds from update time
   
-## 功能特点
+## Features
 
-- 🔐 安全的密码保护访问机制
-- 🌓 优雅的深色/浅色主题切换
-- 📱 完美支持移动端显示
-- 🔄 一键运行所有服务器脚本
-- 1️⃣ 支持前端运行单独帐户脚本
-- 📊 美观的仪表盘界面
-- 🤖 Telegram 机器人通知
-- 🔧 自动添加定时任务
-- 📝 详细的执行日志记录
+- 🔐 Secure password-protected access
+- 🌓 Elegant dark/light mode toggle
+- 📱 Fully mobile-friendly design
+- 🔄 One-click execution of all server scripts
+- 1️⃣ Support for running individual account scripts in the frontend
+- 📊 Aesthetic dashboard interface
+- 🤖 Telegram bot notifications
+- 🔧 Automatic addition of cron jobs
+- 📝 Detailed execution log records
 
-## 部署说明
+## Deployment Instructions
 
-1. 在 Cloudflare Workers 创建新的 Worker
-2. 复制 `worker.js` 内容到 Worker 编辑器
-3. 创建一个名为`CRON_RESULTS`的KV变量
-4. 创建以下变量和机密（txt文件模板）:
-- `PASSWORD`: 前端登陆密码
-- `ACCOUNTS_JSON`: 存储账号信息
-- `TELEGRAM_JSON`: 存储 Telegram 配置
-- `CRON_RESULTS`: CRON_RESULTS
+1. Create a new Worker in Cloudflare Workers
+2. Copy the worker.js content into the Worker editor
+3. Create a KV variable named CRON_RESULTS
+4. Set the following variables and secrets (based on provided .txt templates):
+- `PASSWORD`: Login password for the frontend
+- `ACCOUNTS_JSON`: Stores account information
+- `TELEGRAM_JSON`: Stores Telegram configuration
+- `CRON_RESULTS`: Stores cron results
 
-## 使用说明
+## Usage Instructions
 
-1. 访问部署后的 Worker URL
-2. 使用设置的密码登录
-3. 查看服务器状态或点击"一键运行脚本"
+1. Access the deployed Worker URL
+2. Log in using the set password
+3. View server status or click "Run All Scripts"
 
-## 特色功能
+## Key Features
 
-- 自动添加缺失的定时任务
-- 支持多账号批量管理
-- 实时推送执行结果到 Telegram
-- 优雅的深色模式支持
-- 完美适配移动端显示
+- Automatically add missing cron jobs
+- Support for multi-account batch management
+- Real-time execution results pushed to Telegram
+- Elegant dark mode support
+- Fully optimized for mobile displays
 
-## 注意事项
+## Notes
 
-- 建议设置 Worker 的定时触发器以实现自动运行
-- 请妥善保管账号密码等敏感信息
-- 建议定期检查执行日志确保正常运行
-- 首次使用时会自动添加缺失的定时任务
+- It is recommended to set up a scheduled trigger for the Worker to enable automatic execution.
+- Keep sensitive information like passwords and account details secure.
+- Periodically check execution logs to ensure normal operation.
+- Missing cron jobs will be automatically added during first-time use.
 
-## 技术栈
+## Tech Stack
 
 - Cloudflare Workers
 - KV Storage
 - Material Design
 - Telegram Bot API
 
-## 开源协议
+## License
 
 MIT License
 
-## 问题反馈
+## Feedback
 
-如有问题或建议,欢迎提交 Issue 或 Pull Request
+If you have any issues or suggestions, feel free to submit an Issue or Pull Request.
 
-## 致谢
+## Acknowledgements
 
-感谢所有为本项目提供建议和帮助的朋友们
+Thanks to everyone who contributed suggestions and help for this project.
+
