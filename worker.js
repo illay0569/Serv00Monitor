@@ -124,11 +124,6 @@ function getHtmlContent() {
     
     <title>Serv00 Monitor | 服务器监控面板</title>
 
-    <!-- 预加载关键资源 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" as="style">
-    
     <!-- 现有的样式表链接 -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     
@@ -167,6 +162,7 @@ function getHtmlContent() {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
       }
 
       body {
@@ -202,31 +198,39 @@ function getHtmlContent() {
         align-items: center;
         justify-content: center;
         z-index: 1000;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s ease;
-        background: rgba(255, 255, 255, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-      }
-
-      .theme-toggle.light {
-        background: rgba(255, 255, 255, 0.8);
-        color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      }
-
-      .theme-toggle.dark {
-        background: rgba(30, 41, 59, 0.2);
-        color: #fbbf24;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: transparent !important;
+        box-shadow: none !important;
+        -webkit-tap-highlight-color: transparent;
       }
 
       .theme-toggle:hover {
-        transform: scale(1.1);
+        background: transparent !important;
+        transform: none;
+      }
+
+      .theme-toggle:active {
+        background: transparent !important;
       }
 
       .theme-toggle i {
         font-size: 24px;
+        transition: all 0.3s ease;
+        background: transparent !important;
+      }
+
+      .theme-toggle.light i {
+        color: #f59e0b;
+      }
+
+      .theme-toggle.dark i {
+        color: #e5e7eb;
+      }
+
+      .theme-toggle.light,
+      .theme-toggle.dark {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
       }
 
       .login-container {
@@ -1250,12 +1254,44 @@ function getHtmlContent() {
       document.addEventListener('DOMContentLoaded', () => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-        metaThemeColor.setAttribute('content', prefersDark ? '#000000' : '#ffffff');
         
-        // 如果需要,也可以在这里设置初始主题
+        // 设置初始主题
         if (prefersDark) {
           document.body.classList.add('dark');
           document.body.classList.remove('light');
+          metaThemeColor.setAttribute('content', '#000000');
+          
+          // 更新所有带主题类的元素
+          document.querySelectorAll('[class*="light"]').forEach(element => {
+            element.classList.remove('light');
+            element.classList.add('dark');
+          });
+          
+          // 更新主题切换按钮
+          const themeToggle = document.getElementById('themeToggle');
+          if (themeToggle) {
+            themeToggle.classList.remove('light');
+            themeToggle.classList.add('dark');
+            themeToggle.innerHTML = '<i class="material-icons-round">dark_mode</i>';
+          }
+        } else {
+          document.body.classList.add('light');
+          document.body.classList.remove('dark');
+          metaThemeColor.setAttribute('content', '#ffffff');
+          
+          // 更新所有带主题类的元素
+          document.querySelectorAll('[class*="dark"]').forEach(element => {
+            element.classList.remove('dark');
+            element.classList.add('light');
+          });
+          
+          // 更新主题切换按钮
+          const themeToggle = document.getElementById('themeToggle');
+          if (themeToggle) {
+            themeToggle.classList.remove('dark');
+            themeToggle.classList.add('light');
+            themeToggle.innerHTML = '<i class="material-icons-round">light_mode</i>';
+          }
         }
       });
 
