@@ -1192,7 +1192,7 @@ function getHtmlContent() {
                 '</div>' +
               '</div>' +
               '<button onclick="runSingleAccount(\\\'' + result.username + '\\\')" class="run-single-btn ' + theme + '">' +
-                '运 行' +
+                'Operation' +
               '</button>' +
             '</div>' +
             '<div class="cron-results-container">' +
